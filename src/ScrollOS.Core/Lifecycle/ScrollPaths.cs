@@ -4,6 +4,7 @@ namespace ScrollOS.Core.Lifecycle;
 public sealed record ScrollPaths(string Home, string AppsDir, string SdkPath, string HostExe)
 {
     public string HostLog => Path.Combine(Home, "logs", "host.log");
+    public string CoreLog => Path.Combine(Home, "logs", "core.log");
 
     /// <summary>
     /// Data lives in <c>--home</c>, <c>%SCROLLOS_HOME%</c>, or <c>%USERPROFILE%\.scrollos</c>.

@@ -11,6 +11,9 @@ namespace ScrollOS.Core.Audio;
 public interface IAudio
 {
     void Play(string sound);
+
+    /// <summary>Why sounds can't play on this machine, or null if they can (or are deliberately muted).</summary>
+    string? Unavailable => null;
 }
 
 public sealed class NullAudio : IAudio
@@ -44,9 +47,13 @@ public sealed partial class WindowsAudio(string cacheDir) : IAudio
 /// Silent if neither is installed. One sound at a time, like <see cref="WindowsAudio"/>.
 /// </summary>
 [UnsupportedOSPlatform("windows")]
-public sealed class LinuxAudio(string cacheDir) : IAudio
+public sealed class LinuxAudio(string cacheDir, Action<string>? log = null) : IAudio
 {
     readonly string? player = FindPlayer();
+
+    public string? Unavailable => player is not null ? null
+        : "No sound: install an audio player. On WSL: sudo apt install pulseaudio-utils. " +
+          "On Raspberry Pi OS: sudo apt install alsa-utils.";
     System.Diagnostics.Process? current;
 
     static string? FindPlayer()
@@ -77,11 +84,32 @@ public sealed class LinuxAudio(string cacheDir) : IAudio
                 RedirectStandardError = true,
                 UseShellExecute = false,
             };
-            if (player.EndsWith("aplay", StringComparison.Ordinal)) psi.ArgumentList.Add("-q");
-            psi.ArgumentList.Add(path);
-            current = System.Diagnostics.Process.Start(psi);
+            foreach (var arg in PlayerArguments(player, path)) psi.ArgumentList.Add(arg);
+            var process = System.Diagnostics.Process.Start(psi);
+            current = process;
+            if (process is not null && log is not null) _ = ReportFailureAsync(process);
         }
-        catch (Exception ex) when (ex is IOException or System.ComponentModel.Win32Exception or UnauthorizedAccessException) { }
+        catch (Exception ex) when (ex is IOException or System.ComponentModel.Win32Exception or UnauthorizedAccessException)
+        {
+            log?.Invoke($"{player} couldn't start: {ex.Message}");
+        }
+    }
+
+    /// <summary>Command-line arguments for playing <paramref name="wav"/> with the given player executable.</summary>
+    public static string[] PlayerArguments(string player, string wav) =>
+        Path.GetFileName(player) == "aplay" ? ["-q", wav] : [wav]; // only aplay has -q; "paplay" also ends in "aplay"
+
+    /// <summary>Logs the player's exit code and error output when it fails (only when a log is attached).</summary>
+    async Task ReportFailureAsync(System.Diagnostics.Process process)
+    {
+        try
+        {
+            var error = await process.StandardError.ReadToEndAsync();
+            await process.WaitForExitAsync();
+            if (process.ExitCode != 0 || error.Length > 0)
+                log?.Invoke($"{player} exited with {process.ExitCode}: {error.Trim()}");
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or IOException) { } // killed by the next sound
     }
 }
 

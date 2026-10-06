@@ -42,6 +42,8 @@ public sealed class ScrollOSApp
 
     HostClient? host;
     bool hostReady;
+    /// <summary>True once the host couldn't be started or kept crashing; before the first start it's just "starting".</summary>
+    bool hostFailed;
     int hostRestarts;
     string? cwd;
     long? focusedApp;
@@ -71,7 +73,7 @@ public sealed class ScrollOSApp
         var cache = Path.Combine(paths.Home, "cache", "sounds");
         if (Environment.GetEnvironmentVariable("SCROLLOS_MUTE") is "1") return new NullAudio();
         if (OperatingSystem.IsWindows()) return new WindowsAudio(cache);
-        if (OperatingSystem.IsLinux()) return new LinuxAudio(cache);
+        if (OperatingSystem.IsLinux()) return new LinuxAudio(cache, Trace ? line => TraceLine(paths, "audio: " + line) : null);
         return new NullAudio();
     }
 
@@ -121,9 +123,11 @@ public sealed class ScrollOSApp
         {
             client.Start(m => events.Writer.TryWrite(new HostMessage(m)), () => events.Writer.TryWrite(new HostExited(client)));
             host = client;
+            hostFailed = false;
         }
         catch (Exception ex)
         {
+            hostFailed = true;
             Notify(ex.Message, error: true);
         }
     }
@@ -538,9 +542,12 @@ public sealed class ScrollOSApp
 
     // ---------------------------------------------------------------- host messages
 
+    static readonly bool Trace = Environment.GetEnvironmentVariable("SCROLLOS_TRACE") is "1";
+
     void HandleHost(Message m)
     {
         dirty = true;
+        if (Trace) TraceLine($"host: {m.Type} entry={m.Entry} {m.Text}");
         switch (m.Type)
         {
             case MessageTypes.Ready:
@@ -585,13 +592,46 @@ public sealed class ScrollOSApp
             case MessageTypes.Notify when m.Text is not null:
                 var source = SessionForHost(m.Entry)?.EntryId;
                 Notify(m.Text, m.Error is not null, source);
-                if (source is not null) audio.Play(NotificationChime);
+                if (source is not null) PlaySound(NotificationChime);
                 break;
 
             case MessageTypes.Sound when m.Text is not null:
-                audio.Play(m.Text);
+                PlaySound(m.Text);
                 break;
         }
+    }
+
+    /// <summary>With SCROLLOS_TRACE=1, appends a diagnostic line to logs/core.log.</summary>
+    void TraceLine(string line) => TraceLine(paths, line);
+
+    static readonly object TraceLock = new();
+
+    static void TraceLine(ScrollPaths paths, string line)
+    {
+        lock (TraceLock) // audio failures are reported from background threads
+        {
+            try
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(paths.CoreLog)!);
+                File.AppendAllText(paths.CoreLog, $"{DateTimeOffset.Now:HH:mm:ss.fff} {line}\n");
+            }
+            catch (IOException) { }
+        }
+    }
+
+    bool audioWarned;
+
+    /// <summary>Plays a sound, or, the first time sound turns out to be unavailable, explains why in the timeline.</summary>
+    void PlaySound(string sound)
+    {
+        if (Trace) TraceLine($"sound: {sound} via {audio.GetType().Name}, unavailable={audio.Unavailable ?? "no"}");
+        if (audio.Unavailable is { } reason)
+        {
+            if (!audioWarned) Notify(reason, error: true);
+            audioWarned = true;
+            return;
+        }
+        audio.Play(sound);
     }
 
     void HandleHostExit()
@@ -616,6 +656,7 @@ public sealed class ScrollOSApp
         }
         else
         {
+            hostFailed = true;
             Notify($"The PowerShell host keeps stopping. See {paths.HostLog}.", error: true);
         }
     }
@@ -656,7 +697,7 @@ public sealed class ScrollOSApp
         if (scroll > 0) b.Write(x, 0, $"  ↑ {scroll} lines back · PgDn to return", bar with { Fg = Theme.Accent });
 
         clock = DateTime.Now.ToString("HH:mm");
-        var hostState = hostReady ? "PowerShell ●" : host is null ? "PowerShell offline" : "PowerShell starting…";
+        var hostState = hostReady ? "PowerShell ●" : hostFailed ? "PowerShell offline" : "PowerShell starting…";
         var right = $"{hostState}  {clock} ";
         b.Write(b.Width - right.Length, 0, right, bar with { Fg = hostReady ? Theme.Ok : Theme.Muted });
     }

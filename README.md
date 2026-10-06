@@ -58,8 +58,11 @@ cd /mnt/c/<path-to-repo>/out/linux-arm64
 ./scrollos
 ```
 
-For sound in WSL, install a player: `sudo apt install pulseaudio-utils`. The same `linux-arm64` build is what a
-64-bit Raspberry Pi runs.
+For sound in WSL, install a player: `sudo apt install pulseaudio-utils` (ScrollOS posts a timeline notification if
+it can't find one). The same `linux-arm64` build is what a 64-bit Raspberry Pi runs.
+
+Troubleshooting: set `SCROLLOS_TRACE=1` to log every message from the PowerShell host to `logs/core.log` in the
+data folder (next to `logs/host.log`).
 
 ### Layout
 

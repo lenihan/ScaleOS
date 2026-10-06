@@ -77,6 +77,16 @@ public class GraphicsAndAudioTests
         Assert.Null(ToneSynth.Parse("beep:440/80"));
     }
 
+    [Theory]
+    [InlineData("/usr/bin/aplay", new[] { "-q", "x.wav" })]
+    [InlineData("/usr/bin/paplay", new[] { "x.wav" })] // paplay rejects -q; its name also ends in "aplay"
+    public void LinuxPlayerArguments(string player, string[] expected)
+    {
+#pragma warning disable CA1416 // pure argument logic; safe to test on any OS
+        Assert.Equal(expected, LinuxAudio.PlayerArguments(player, "x.wav"));
+#pragma warning restore CA1416
+    }
+
     [Fact]
     public void ToneSynthWritesPcmWav()
     {

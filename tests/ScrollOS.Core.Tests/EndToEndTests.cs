@@ -142,6 +142,34 @@ public sealed class EndToEndTests(ITestOutputHelper output) : IDisposable
         Assert.Contains("\"state\":\"paused\"", state);
     }
 
+    [Fact]
+    public async Task MissingAudioIsExplainedOnceInTheTimeline()
+    {
+        var paths = TestPaths();
+        var terminal = new FakeTerminal(100, 40);
+        var run = Task.Run(() => new ScrollOSApp(terminal, paths, new UnavailableAudio()).RunAsync());
+        await terminal.WaitFor("PowerShell ●");
+
+        terminal.Type("invaders\r");
+        await terminal.WaitFor("Score 0");
+        terminal.Type(" ");
+        await terminal.WaitFor("No player here");
+        terminal.Type(" ");
+        await Task.Delay(500);
+        terminal.Type("\x11");
+        Assert.Equal(0, await run.WaitAsync(Timeout));
+
+        var index = await File.ReadAllTextAsync(Path.Combine(home, "timeline", "index.jsonl"));
+        Assert.Single(index.Split('\n'), line => line.Contains("No player here"));
+    }
+
+    sealed class UnavailableAudio : IAudio
+    {
+        public void Play(string sound) => throw new InvalidOperationException("Play shouldn't be called when audio is unavailable.");
+
+        public string? Unavailable => "No player here.";
+    }
+
     static async Task WaitUntil(Func<bool> condition, Func<string> what)
     {
         var deadline = DateTime.UtcNow + Timeout;
