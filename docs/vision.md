@@ -1,12 +1,12 @@
-# ScrollOS
+# ScaleOS
 
 > History is your desktop.
 
-## What is ScrollOS?
+## What is ScaleOS?
 
-ScrollOS is an experimental terminal-based operating environment where graphical applications run directly inside a terminal and remain accessible through persistent scrollback history.
+ScaleOS is an experimental terminal-based operating environment where graphical applications run directly inside a terminal and remain accessible through persistent scrollback history.
 
-Unlike traditional operating systems that organize work using windows, desktops, and taskbars, ScrollOS organizes work as a continuous timeline.
+Unlike traditional operating systems that organize work using windows, desktops, and taskbars, ScaleOS organizes work as a continuous timeline.
 
 Applications do not disappear when closed. They leave behind visual artifacts in history that can be revisited, inspected, and resumed.
 
@@ -26,7 +26,7 @@ Desktop
 └─ Window D
 ```
 
-ScrollOS organizes work temporally.
+ScaleOS organizes work temporally.
 
 ```text
 09:00 Shell
@@ -95,7 +95,7 @@ Example:
 ┌──────────────────────────────┐
 │ Notes                        │
 ├──────────────────────────────┤
-│ - Build ScrollOS prototype   │
+│ - Build ScaleOS prototype    │
 │ - Research PTYs              │
 │ - Design app lifecycle       │
 └──────────────────────────────┘
@@ -144,7 +144,7 @@ Close App
 Gone
 ```
 
-ScrollOS:
+ScaleOS:
 
 ```text
 Open App
@@ -170,11 +170,11 @@ Resume application
 
 ---
 
-# Why ScrollOS Exists
+# Why ScaleOS Exists
 
 Modern operating systems are optimized around managing windows.
 
-ScrollOS explores a different idea:
+ScaleOS explores a different idea:
 
 > What if application history became the primary workspace?
 
@@ -226,7 +226,7 @@ Install-Module SpaceInvadersPS
 
 # Runtime Responsibilities
 
-The ScrollOS runtime provides:
+The ScaleOS runtime provides:
 
 - Rendering
 - Input
@@ -239,7 +239,7 @@ The ScrollOS runtime provides:
 Conceptually:
 
 ```text
-ScrollOS Runtime
+ScaleOS Runtime
 │
 ├─ Timeline Engine
 ├─ Renderer
@@ -274,7 +274,7 @@ Applications may:
 
 # Multiple Sessions
 
-ScrollOS supports multiple active application contexts.
+ScaleOS supports multiple active application contexts.
 
 Examples:
 
@@ -418,7 +418,7 @@ Power On
 ↓
 Boot Linux
 ↓
-Launch ScrollOS
+Launch ScaleOS
 ↓
 Ready
 ```
@@ -479,10 +479,10 @@ Success is achieved when a user can:
 4. Scroll back and still see it.
 5. Resume it from history.
 
-If that works, the fundamental ScrollOS concept has been proven.
+If that works, the fundamental ScaleOS concept has been proven.
 
 ---
 
 # One-Sentence Description
 
-ScrollOS is a terminal-based operating environment where graphical PowerShell applications become persistent, resumable artifacts in a scrollable history.
+ScaleOS is a terminal-based operating environment where graphical PowerShell applications become persistent, resumable artifacts in a scrollable history.

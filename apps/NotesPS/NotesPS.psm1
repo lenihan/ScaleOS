@@ -1,4 +1,4 @@
-# NotesPS: a persistent notes app for ScrollOS.
+# NotesPS: a persistent notes app for ScaleOS.
 # Close it and it stays in the timeline; resume it later and your notes come back.
 
 $script:Notes = [System.Collections.Generic.List[string]]::new()

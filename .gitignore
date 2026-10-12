@@ -481,5 +481,5 @@ $RECYCLE.BIN/
 # Vim temporary swap files
 *.swp
 
-# ScrollOS publish output (scripts/publish.ps1)
+# ScaleOS publish output (scripts/publish.ps1)
 out/

@@ -1,4 +1,4 @@
-# InvadersPS: a small Space Invaders for ScrollOS.
+# InvadersPS: a small Space Invaders for ScaleOS.
 # Validates graphics (canvas sprites), animation (timer ticks), input, audio and persistence:
 # close or quit mid-game and Resume puts you back where you were.
 
@@ -42,7 +42,7 @@ function New-Game {
 function Set-GameState([string]$State) {
     $script:State = $State
     # Only tick while playing, so a paused or finished game costs nothing in the background.
-    Set-ScrollTimer $(if ($State -eq 'playing') { $script:TickMs } else { 0 })
+    Set-SosTimer $(if ($State -eq 'playing') { $script:TickMs } else { 0 })
 }
 
 function Get-InvaderPosition([int]$Index) {

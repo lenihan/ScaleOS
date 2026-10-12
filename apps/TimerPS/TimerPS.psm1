@@ -1,4 +1,4 @@
-# TimerPS: a countdown timer for ScrollOS.
+# TimerPS: a countdown timer for ScaleOS.
 # Start it, press Ctrl+Z to send it to the background, and a notification lands in the timeline when it ends.
 
 $script:Remaining = [timespan]::Zero   # time left while paused
@@ -63,13 +63,13 @@ function Show-App {
 function Start-Countdown {
     if ((Get-TimeLeft) -le [timespan]::Zero) { return }
     $script:EndsAt = [datetime]::Now + (Get-TimeLeft)
-    Set-ScrollTimer 250
+    Set-SosTimer 250
 }
 
 function Stop-Countdown {
     $script:Remaining = Get-TimeLeft
     $script:EndsAt = $null
-    Set-ScrollTimer 0
+    Set-SosTimer 0
 }
 
 function Invoke-AppInput {
@@ -100,7 +100,7 @@ function Invoke-AppInput {
             if ($script:EndsAt -and [datetime]::Now -ge $script:EndsAt) {
                 Stop-Countdown
                 $what = if ($script:Label) { "'$script:Label'" } else { 'Countdown' }
-                Send-ScrollNotification "$what finished at $([datetime]::Now.ToString('HH:mm'))."
+                Send-SosNotification "$what finished at $([datetime]::Now.ToString('HH:mm'))."
             }
         }
     }

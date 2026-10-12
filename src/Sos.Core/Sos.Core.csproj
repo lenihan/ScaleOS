@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>sos</AssemblyName>
+    <RootNamespace>Sos.Core</RootNamespace>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- Keep the core Native AOT-compatible so it can be published as a small, fast-starting exe later. -->
+    <IsAotCompatible>true</IsAotCompatible>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Sos.Protocol\Sos.Protocol.csproj" />
+    <!-- Build the PowerShell host alongside the core without linking it in; it runs as a separate process. -->
+    <ProjectReference Include="..\Sos.Host\Sos.Host.csproj" ReferenceOutputAssembly="false" Private="false" SkipGetTargetFrameworkProperties="true" />
+  </ItemGroup>
+
+  <!-- Copy the host, SDK module and sample apps next to sos.exe so the output folder is self-contained. -->
+  <Target Name="CopySosRuntimeFiles" AfterTargets="Build">
+    <!-- Ask the host project where it built to, so this also works with custom output paths (e.g. artifacts paths). -->
+    <MSBuild Projects="..\Sos.Host\Sos.Host.csproj" Targets="GetTargetPath">
+      <Output TaskParameter="TargetOutputs" ItemName="HostTargetPath" />
+    </MSBuild>
+    <PropertyGroup>
+      <HostOutDir>@(HostTargetPath->'%(RootDir)%(Directory)')</HostOutDir>
+    </PropertyGroup>
+    <ItemGroup>
+      <HostFiles Include="$(HostOutDir)**\*" />
+      <SdkFiles Include="..\Sos.Sdk\**\*" />
+      <AppFiles Include="..\..\apps\**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(HostFiles)" DestinationFiles="@(HostFiles->'$(OutDir)host\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(SdkFiles)" DestinationFiles="@(SdkFiles->'$(OutDir)sdk\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(AppFiles)" DestinationFiles="@(AppFiles->'$(OutDir)apps\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+  </Target>
+
+</Project>
